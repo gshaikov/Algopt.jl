@@ -1,6 +1,7 @@
-using Algopt
-using Test
+tests = [
+    "derivatives.jl",
+]
 
-@testset "Algopt.jl" begin
-    # Write your own tests here.
+for test in tests
+    include(test)
 end

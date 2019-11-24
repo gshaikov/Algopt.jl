@@ -1,3 +1,8 @@
+module TestDerivatives
+
+using Algopt
+using Test
+
 test_func = x->x^2
 
 @testset "derivatives.jl df" begin
@@ -12,4 +17,6 @@ end
     x = 3
     result = Algopt.Derivatives.df_complex(test_func, x)
     @test result == 2x
+end
+
 end
