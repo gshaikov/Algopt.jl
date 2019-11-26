@@ -1,5 +1,6 @@
 tests = [
     "uni_derivative.jl",
+    "bracketing.jl",
 ]
 
 for test in tests
