@@ -3,17 +3,15 @@ module UniDerivative
 Compute derivative of a univariate function.
 """
 
-@enum DiffMethod begin
-    complex = 1
+abstract type DerivativeMethod end
+struct CentralDiff <: DerivativeMethod end
+struct ComplexDiff <: DerivativeMethod end
+
+function df(::CentralDiff, f, x::Real; h = cbrt(eps()))::Real
+    (f(x + h / 2) - f(x - h / 2)) / h
 end
 
-function df(f, x; method = complex)
-    if method == complex
-        df_complex(f, x)
-    end
-end
-
-function df_complex(f, x; h = 1e-20)
+function df(::ComplexDiff, f, x::Real; h = 1e-20)::Real
     imag(f(x + h * im)) / h
 end
 
