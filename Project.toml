@@ -3,6 +3,9 @@ uuid = "73adc476-4df0-4309-89fd-c50cfdee7c7f"
 authors = ["George Shaikovski <george.shaikouski@mobilityhouse.com>"]
 version = "0.1.0"
 
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
 [compat]
 julia = "1"
 
