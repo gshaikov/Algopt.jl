@@ -1,4 +1,7 @@
-module Derivatives
+module UniDerivative
+"""
+Compute derivative of a univariate function.
+"""
 
 @enum DiffMethod begin
     complex = 1

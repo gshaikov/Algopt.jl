@@ -1,5 +1,5 @@
 tests = [
-    "derivatives.jl",
+    "uni_derivative.jl",
 ]
 
 for test in tests
