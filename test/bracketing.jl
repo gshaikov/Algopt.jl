@@ -12,6 +12,12 @@ quadratic = x->(x - 2)^2
     @test 2 ≈ search(GoldenSection(), quadratic)
     @test 2 ≈ search(GoldenSection(), quadratic, -1e6)
     @test !(2 ≈ search(GoldenSection(max_iter = 2), quadratic))
+    
+    @test abs(0 - search(GoldenSection(), x->x'x)) < eps()
+
+    quad = x->x'x
+    direct = α->quad([10, 10] + α * [-1, -1])
+    @test 10 ≈ search(GoldenSection(), direct, 0)
 end
 
 @testset "find_bracket" begin
