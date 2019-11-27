@@ -5,7 +5,7 @@ export Bracket
 abstract type BracketingMethod end
 
 function search(method, f, x = 0)::Real
-    search_bracket(f, find_bracket(f, x), method).right
+    search_bracket(method, f, find_bracket(f, x)).right
 end
 
 struct Bracket
@@ -40,7 +40,7 @@ function find_bracket(f, x; step = 1e-2, factor = 2.0, max_iter = 1_000)::Bracke
         a, ya, b, yb = b, yb, c, yc
         step *= factor
     end
-    Bracket(a, b)
+    error("can't find a bracket")
 end
 
 struct GoldenSection <: BracketingMethod
@@ -49,7 +49,7 @@ struct GoldenSection <: BracketingMethod
     GoldenSection(; ϵ = eps(), max_iter = 1_000) = new(ϵ, max_iter)
 end
 
-function search_bracket(f, bracket::Bracket, params::GoldenSection)::Bracket
+function search_bracket(params::GoldenSection, f, bracket::Bracket)::Bracket
     """
     Golden section search
     Algorithm 3.3

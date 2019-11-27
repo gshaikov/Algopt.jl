@@ -8,7 +8,7 @@ GoldenSection
 
 quadratic = x->(x - 2)^2
 
-@testset "search" begin
+@testset "search GoldenSection" begin
     @test 2 ≈ search(GoldenSection(), quadratic)
     @test 2 ≈ search(GoldenSection(), quadratic, -1e6)
     @test !(2 ≈ search(GoldenSection(max_iter = 2), quadratic))
@@ -35,15 +35,15 @@ end
 end
 
 @testset "search_bracket" begin
-    bracket = search_bracket(quadratic, Bracket(0, 10), GoldenSection())
+    bracket = search_bracket(GoldenSection(), quadratic, Bracket(0, 10))
     @test bracket.left ≈ 2
     @test bracket.right ≈ 2
 
-    bracket = search_bracket(quadratic, Bracket(-1e6, 1e6), GoldenSection())
+    bracket = search_bracket(GoldenSection(), quadratic, Bracket(-1e6, 1e6))
     @test bracket.left ≈ 2
     @test bracket.right ≈ 2
 
-    bracket = search_bracket(quadratic, Bracket(-1e6, 1e6), GoldenSection(max_iter = 2))
+    bracket = search_bracket(GoldenSection(max_iter = 2), quadratic, Bracket(-1e6, 1e6))
     @test !(bracket.left ≈ 2)
     @test !(bracket.right ≈ 2)
 end
