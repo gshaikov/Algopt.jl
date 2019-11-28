@@ -47,6 +47,10 @@ struct DescentPointK
 end
 
 struct StrongWolfeConditions
+    """
+    Strong Wolfe conditions are termination conditions for local descent
+        search of optimal optimization step α.
+    """
     first
     second
     function StrongWolfeConditions(params, f, ∇f, point_k)
@@ -56,6 +60,11 @@ struct StrongWolfeConditions
 end
 
 struct BracketConditions
+    """
+    Bracket conditions are termination condition for a search of a bracket
+        [α_left, α_right] such that the bracket contains a local minimum of
+        the function f(x + αd).
+    """
     first
     second
     third
