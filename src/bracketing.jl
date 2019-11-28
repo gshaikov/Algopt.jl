@@ -1,7 +1,5 @@
 module Bracketing
 
-export Bracket
-
 abstract type BracketingMethod end
 
 function search(method, f, x = 0)::Real
