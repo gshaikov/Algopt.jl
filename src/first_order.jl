@@ -1,0 +1,72 @@
+module FirstOrder
+
+include("./local_descent.jl")
+
+using LinearAlgebra
+
+import .LocalDescent:
+search,
+LineSearch, StrongBacktracking
+
+struct Termination
+    max_iter
+    ϵ_abs
+    ϵ_rel
+    ϵ_grad
+    Termination(;
+        max_iter = 1_000,
+        ϵ_abs = 1e-3,
+        ϵ_rel = 1e-3,
+        ϵ_grad = 1e-3) =
+        new(max_iter, ϵ_abs, ϵ_rel, ϵ_grad)
+end
+
+mutable struct TerminationConditions
+    abs
+    rel
+    grad
+    TerminationConditions(term::Termination) = 
+    new((fx, fx_next)->fx - fx_next < term.ϵ_abs,
+        (fx, fx_next)->fx - fx_next < term.ϵ_abs * fx,
+        ∇fx_next->norm(∇fx_next) < term.ϵ_grad)
+end
+
+abstract type FirstOrderMethods end
+
+function search(params::FirstOrderMethods, f, ∇f, x_0; term = Termination())
+    term_cond = TerminationConditions(term)
+    x = x_0
+    for _ = 1:term.max_iter
+        x_next = descent_step(params, f, ∇f, x)
+        fx, fx_next, ∇fx_next = f(x), f(x_next), ∇f(x_next)
+        if term_cond.abs(fx, fx_next) ||
+            term_cond.rel(fx, fx_next) ||
+            term_cond.grad(∇fx_next)
+            return x_next
+        end
+        x = x_next
+    end
+    x
+end
+
+struct MaximumGradientDescent <: FirstOrderMethods end
+
+function descent_step(params::MaximumGradientDescent, f, ∇f, x)
+    """
+    Maximum Gradient Descent
+    Algorithm 5.1
+
+    A step of maximum gradient descent produces the value of x(k+1)
+    where f(x) in the direction of maximum descent is at its local
+    minimum.
+    """
+    d = direction(params, ∇f, x)
+    search(LineSearch(), f, x, d)
+end
+
+function direction(params::MaximumGradientDescent, ∇f, x)
+    g = ∇f(x)
+    -g / norm(g)
+end
+
+end
