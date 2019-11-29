@@ -3,6 +3,7 @@ module LocalDescent
 include("./bracketing.jl")
 
 using LinearAlgebra
+
 import .Bracketing:
 search,
 GoldenSection
