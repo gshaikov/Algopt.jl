@@ -19,6 +19,9 @@ struct Termination
         ϵ_rel = 1e-3,
         ϵ_grad = 1e-3) =
         new(max_iter, ϵ_abs, ϵ_rel, ϵ_grad)
+    Termination(ϵ;
+        max_iter = 1_000) =
+        new(max_iter, ϵ, ϵ, ϵ)
 end
 
 mutable struct TerminationConditions
@@ -64,7 +67,6 @@ struct MaximumGradientDescent <: FirstOrderMethods end
 function descent_step(params::MaximumGradientDescent, f, ∇f, x)
     """
     Maximum Gradient Descent
-    Algorithm 5.1
 
     A step of maximum gradient descent produces the value of x(k+1)
     where f(x) in the direction of maximum descent is at its local
@@ -77,6 +79,22 @@ end
 function direction(params::MaximumGradientDescent, ∇f, x)
     g = ∇f(x)
     -g / norm(g)
+end
+
+struct GradientDescent <: FirstOrderMethods
+    α
+    GradientDescent(; α = 1) = new(α)
+end
+
+function descent_step(params::GradientDescent, f, ∇f, x)
+    """
+    Gradient Descent
+    Algorithm 5.1
+
+    A step of a gradient descent algorithm with fixed learning rate α.
+    """
+    g = ∇f(x)
+    x - params.α * g
 end
 
 end

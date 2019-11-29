@@ -2,9 +2,12 @@ module TestFirstOrder
 
 using Test
 
+using LinearAlgebra
+
 using Algopt.FirstOrder:
 search, descent_step, direction,
-MaximumGradientDescent
+Termination,
+MaximumGradientDescent, GradientDescent
 
 quad0 = x->x'x
 ∇quad0 = x->2x
@@ -28,6 +31,13 @@ quad3 = x->(x - [3, 3])' * (x - [3, 3])
 
     @test [3, 3] ≈ descent_step(mgd, quad3, ∇quad3, [10, 10])
     @test [3, 3] ≈ search(mgd, quad3, ∇quad3, [10, 10])
+
+    gd = GradientDescent(α = 1e-2)
+    @test [3, 3.98] ≈ descent_step(gd, quad3, ∇quad3, [3, 4])
+    @test norm([3, 3] - search(gd, quad3, ∇quad3, [3, 4])) < 1
+
+    @test [9.86, 9.86] ≈ descent_step(gd, quad3, ∇quad3, [10, 10])
+    @test norm([3, 3] - search(gd, quad3, ∇quad3, [10, 10])) < 1
 end
 
 end
