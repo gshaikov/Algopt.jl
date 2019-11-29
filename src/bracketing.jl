@@ -2,8 +2,8 @@ module Bracketing
 
 abstract type BracketingMethod end
 
-function search(method, f, x = 0)::Real
-    search_bracket(method, f, find_bracket(f, x)).right
+function search(method::BracketingMethod, f, x_0 = 0)::Real
+    search_bracket(method, f, find_bracket(f, x_0)).right
 end
 
 struct Bracket
