@@ -9,6 +9,6 @@ benchmark-first_order: _benchmark_first_order
 _benchmark_%: build
 	julia --project=dev --color=yes benchmark/$*.jl
 
-plot-first-order: _plot_first_order
-_plot_%:
+plot-first_order: _plot_first_order
+_plot_%: build
 	julia --project=dev --color=yes -i plot/$*.jl
