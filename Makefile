@@ -1,8 +1,12 @@
 build:
-	julia --project=. --color=yes src/Algopt.jl
+	julia --project=dev --color=yes src/Algopt.jl
 
 tests: build
-	julia --project=. --color=yes test/runtests.jl
+	julia --project=dev --color=yes test/runtests.jl
 
 benchmark: build
-	julia --project=. --color=yes test/benchmarking.jl
+	julia --project=dev --color=yes test/benchmarking.jl
+
+plot-first-order: _plot_first_order
+_plot_%:
+	julia --project=dev --color=yes -i plot/$*.jl
