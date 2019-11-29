@@ -6,7 +6,7 @@ using LinearAlgebra
 
 import .LocalDescent:
 search,
-LineSearch, StrongBacktracking
+LineSearch
 
 struct Termination
     max_iter
@@ -33,20 +33,30 @@ end
 
 abstract type FirstOrderMethods end
 
-function search(params::FirstOrderMethods, f, ∇f, x_0; term = Termination())
+function search(params::FirstOrderMethods, f, ∇f, x_0; term = Termination(), trace = false)
     term_cond = TerminationConditions(term)
-    x = x_0
+    X = x_0
     for _ = 1:term.max_iter
+        x = X[:, end]
         x_next = descent_step(params, f, ∇f, x)
         fx, fx_next, ∇fx_next = f(x), f(x_next), ∇f(x_next)
         if term_cond.abs(fx, fx_next) ||
             term_cond.rel(fx, fx_next) ||
             term_cond.grad(∇fx_next)
-            return x_next
+            if trace
+                X = hcat(X, x_next)
+            else
+                X = x_next
+            end
+            break
         end
-        x = x_next
+        if trace
+            X = hcat(X, x_next)
+        else
+            X = x_next
+        end
     end
-    x
+    X
 end
 
 struct MaximumGradientDescent <: FirstOrderMethods end
