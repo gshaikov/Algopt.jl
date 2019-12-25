@@ -59,8 +59,6 @@ end
 
 abstract type FirstOrderMethods end
 
-abstract type ProblemState end
-
 # Maximum Gradient Descent
 
 struct MaximumGradientDescent <: FirstOrderMethods end
