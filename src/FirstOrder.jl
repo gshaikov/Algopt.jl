@@ -77,12 +77,12 @@ function descent_step_maxgd(f, ∇f, x)
     where f(x) in the direction of maximum descent is at its local
     minimum.
     """
-    d = direction_maxgd(∇f, x)
+    g = ∇f(x)
+    d = direction_maxgd(g)
     search(LineSearch(), f, x, d)
 end
 
-function direction_maxgd(∇f, x)
-    g = ∇f(x)
+function direction_maxgd(g)
     -g / norm(g)
 end
 

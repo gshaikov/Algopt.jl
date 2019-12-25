@@ -22,8 +22,8 @@ quad3 = x->(x - [3, 3])' * (x - [3, 3])
 @testset "Algopt.FirstOrder.MaximumGradientDescent" begin
     mgd = MaximumGradientDescent()
 
-    @test [-0.6, -0.8] == direction_maxgd(∇quad0, [3, 4])
-    @test [0, -1] == direction_maxgd(∇quad3, [3, 4])
+    @test [-0.6, -0.8] == direction_maxgd([6, 8])
+    @test [0, -1] == direction_maxgd([0, 2])
 
     @test [0, 0] == descent_step_maxgd(quad0, ∇quad0, [3, 4])
     @test [0, 0] == descent_step_maxgd(quad0, ∇quad0, [10, 10])
