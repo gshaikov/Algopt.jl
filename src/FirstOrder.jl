@@ -107,4 +107,47 @@ function descent_step_gd(α, f, ∇f, x)
     x - α * g
 end
 
+# Conjugate Gradient Descent
+
+struct ConjugateGradientDescent <: FirstOrderMethods end
+
+mutable struct CGDProblemState
+    g
+    d
+    CGDProblemState(dim) = new(ones(dim), zeros(dim))
+end
+
+function search(params::ConjugateGradientDescent, f, ∇f, x_0; term = Termination(), trace = false)
+    state = CGDProblemState(size(x_0))
+    descent_step = (f, ∇f, x)->descent_step_cgd!(state, f, ∇f, x)
+    descent_until(term, descent_step, f, ∇f, x_0, trace)
+end
+
+function descent_step_cgd!(state, f, ∇f, x)
+    """
+    Conjugate Gradient Descent
+    Algorithm 5.2
+
+    https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method
+    """
+    g = ∇f(x)
+    d = direction_cgd(g, state.g, state.d)
+    state.g = g
+    state.d = d
+    search(LineSearch(), f, x, d)
+end
+
+function direction_cgd(g, gm1, dm1)
+    """
+    Polak-Ribiere update
+    Notation:
+        g is for g(k)
+        dm1 is for d(k-1)
+        gm1 indicates g(k-1)
+    """
+    β_PR = (g' * (g - gm1)) / (gm1'gm1)
+    β = max(β_PR, 0)
+    -g + β * dm1
+end
+
 end # module
