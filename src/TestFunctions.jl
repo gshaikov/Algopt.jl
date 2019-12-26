@@ -13,4 +13,4 @@ struct Rosenbrock
         [a, a^2])
 end
 
-end
+end # module

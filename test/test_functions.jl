@@ -1,11 +1,13 @@
-module TestTestFunctions
+module TestFunctionsTests
+
+import ..Algopt # ensure we are using the correct Algopt
 
 using Test
 
 using Algopt.TestFunctions:
 Rosenbrock
 
-@testset "Rosenbrock" begin
+@testset "Algopt.TestFunctions.Rosenbrock" begin
     ros = Rosenbrock()
     @test 0 == ros.f(ros.argmin)
     @test [0, 0] == ros.∇f(ros.argmin)
@@ -15,4 +17,4 @@ Rosenbrock
     @test [0, 0] == ros.∇f(ros.argmin)
 end
 
-end
+end # module

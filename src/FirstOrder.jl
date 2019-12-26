@@ -1,10 +1,8 @@
 module FirstOrder
 
-include("./local_descent.jl")
-
 using LinearAlgebra
 
-import .LocalDescent:
+import ..LocalDescent:
 search,
 LineSearch
 
@@ -97,4 +95,4 @@ function descent_step(params::GradientDescent, f, ∇f, x)
     x - params.α * g
 end
 
-end
+end # module

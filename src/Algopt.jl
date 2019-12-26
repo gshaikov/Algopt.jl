@@ -1,9 +1,9 @@
 module Algopt
 
-include("uni_derivative.jl")
-include("bracketing.jl")
-include("local_descent.jl")
-include("first_order.jl")
-include("test_functions.jl")
+include("UniDerivative.jl")
+include("Bracketing.jl")
+include("LocalDescent.jl")
+include("FirstOrder.jl")
+include("TestFunctions.jl")
 
 end # module

@@ -1,10 +1,8 @@
 module LocalDescent
 
-include("./bracketing.jl")
-
 using LinearAlgebra
 
-import .Bracketing:
+import ..Bracketing:
 search,
 GoldenSection
 
@@ -122,4 +120,4 @@ function zoom_bracket!(bracket::MutBracket, params, wolfe_cond, is_ascending)::R
     bracket.right
 end
 
-end
+end # module

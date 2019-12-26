@@ -1,4 +1,6 @@
-module TestLocalDescent
+module LocalDescentTests
+
+import ..Algopt # ensure we are using the correct Algopt
 
 using Test
 
@@ -16,19 +18,19 @@ quad0 = x->x'x
 quad3 = x->(x - [3, 3])' * (x - [3, 3])
 ∇quad3 = x->2(x - [3, 3])
 
-@testset "search LineSearch" begin
+@testset "Algopt.LocalDescent.search(::LineSearch)" begin
     ls = LineSearch()
     @test [0, 0] ≈ search(ls, quad0, [10, 10], [-1, -1])
     @test [3, 3] ≈ search(ls, quad3, [10, 10], [-1, -1])
 end
 
-@testset "search StrongBacktracking" begin
+@testset "Algopt.LocalDescent.search(::StrongBacktracking)" begin
     sb = StrongBacktracking()
     @test [0, 0] ≈ search(sb, quad0, ∇quad0, [10, 10], [-1, -1])
     @test [3, 3] ≈ search(sb, quad3, ∇quad3, [10, 10], [-1, -1])
 end
 
-@testset "zoom_bracket!" begin
+@testset "Algopt.LocalDescent.zoom_bracket!" begin
     params = StrongBacktracking()
     point_k = DescentPointK(quad0, ∇quad0, [10,10], [-1,-1])
     wolfe_cond = StrongWolfeConditions(params, quad0, ∇quad0, point_k)
@@ -58,7 +60,7 @@ end
     @test α < 11
 end
 
-@testset "find_bracket" begin
+@testset "Algopt.LocalDescent.find_bracket" begin
     params = StrongBacktracking()
     point_k = DescentPointK(quad0, ∇quad0, [10,10], [-1,-1])
     wolfe_cond = StrongWolfeConditions(params, quad0, ∇quad0, point_k)
@@ -68,7 +70,7 @@ end
     @test bracket.right > 10
 end
 
-@testset "DescentPointK" begin
+@testset "Algopt.LocalDescent.DescentPointK" begin
     point_k = DescentPointK(quad0, ∇quad0, [10,10], [-1,-1])
     @test point_k.f == 200
     @test point_k.∇df == -40  # [20, 20]' * [-1, -1]
@@ -76,7 +78,7 @@ end
     @test point_k.d == [-1, -1]
 end
 
-@testset "StrongWolfeConditions" begin
+@testset "Algopt.LocalDescent.StrongWolfeConditions" begin
     params = StrongBacktracking()
     point_k = DescentPointK(quad0, ∇quad0, [10,10], [-1,-1])
     wolfe = StrongWolfeConditions(params, quad0, ∇quad0, point_k)
@@ -94,7 +96,7 @@ end
     @test !wolfe.second(20)
 end
 
-@testset "BracketConditions" begin
+@testset "Algopt.LocalDescent.BracketConditions" begin
     params = StrongBacktracking(; β = 1e-1)
     point_k = DescentPointK(quad0, ∇quad0, [10,10], [-1,-1])
     wolfe = StrongWolfeConditions(params, quad0, ∇quad0, point_k)
@@ -120,4 +122,4 @@ end
     @test bracket.third(20)
 end
 
-end
+end # module

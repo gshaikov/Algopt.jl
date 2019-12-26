@@ -1,4 +1,6 @@
-module TestFirstOrder
+module FirstOrderTests
+
+import ..Algopt # ensure we are using the correct Algopt
 
 using Test
 
@@ -15,7 +17,7 @@ quad0 = x->x'x
 quad3 = x->(x - [3, 3])' * (x - [3, 3])
 ∇quad3 = x->2(x - [3, 3])
 
-@testset "MaximumGradientDescent" begin
+@testset "Algopt.FirstOrder.MaximumGradientDescent" begin
     mgd = MaximumGradientDescent()
     @test [-0.6, -0.8] == direction(mgd, ∇quad0, [3, 4])
     @test [0, 0] == descent_step(mgd, quad0, ∇quad0, [3, 4])
@@ -31,7 +33,9 @@ quad3 = x->(x - [3, 3])' * (x - [3, 3])
 
     @test [3, 3] ≈ descent_step(mgd, quad3, ∇quad3, [10, 10])
     @test [3, 3] ≈ search(mgd, quad3, ∇quad3, [10, 10])
+end
 
+@testset "Algopt.FirstOrder.GradientDescent" begin
     gd = GradientDescent(α = 1e-2)
     @test [3, 3.98] ≈ descent_step(gd, quad3, ∇quad3, [3, 4])
     @test norm([3, 3] - search(gd, quad3, ∇quad3, [3, 4])) < 1
@@ -40,4 +44,4 @@ quad3 = x->(x - [3, 3])' * (x - [3, 3])
     @test norm([3, 3] - search(gd, quad3, ∇quad3, [10, 10])) < 1
 end
 
-end
+end # module

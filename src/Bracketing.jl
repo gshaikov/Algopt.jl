@@ -74,4 +74,4 @@ function search_bracket(params::GoldenSection, f, bracket::Bracket)::Bracket
     Bracket(a, b)
 end
 
-end
+end # module

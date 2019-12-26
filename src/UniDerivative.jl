@@ -23,4 +23,4 @@ function df(param::ComplexDiff, f, x::Real)::Real
     imag(f(x + param.h * im)) / param.h
 end
 
-end
+end # module
