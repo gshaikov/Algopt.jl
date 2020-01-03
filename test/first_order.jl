@@ -36,11 +36,12 @@ ros = Rosenbrock(a = 1, b = 5)
     @test [3, 3] ≈ descent_step_maxgd(quad3, ∇quad3, [10, 10])
 
     mgd = MaximumGradientDescent()
-    @test [0, 0] == search(mgd, quad0, ∇quad0, [3, 4])
-    @test [0, 0] == search(mgd, quad0, ∇quad0, [10, 10])
-    @test [3, 3] == search(mgd, quad3, ∇quad3, [3, 4])
-    @test [3, 3] ≈ search(mgd, quad3, ∇quad3, [10, 10])
-    @test norm([1, 1] - search(mgd, ros.f, ros.∇f, [10, 12])) < cbrt(eps())
+    x0 = [rand(-10:.1:10), rand(-10:.1:10)]
+    @test norm([0, 0] - search(mgd, quad0, ∇quad0, x0)) < cbrt(eps())
+    @test norm([0, 0] - search(mgd, quad0, ∇quad0, x0)) < cbrt(eps())
+    @test [3, 3] ≈ search(mgd, quad3, ∇quad3, x0)
+    @test [3, 3] ≈ search(mgd, quad3, ∇quad3, x0)
+    @test norm([1, 1] - search(mgd, ros.f, ros.∇f, x0)) < cbrt(eps())
 end
 
 @testset "Algopt.FirstOrder.GradientDescent" begin
@@ -48,10 +49,13 @@ end
     @test [3, 3.98] == descent_step_gd(α, quad3, ∇quad3, [3, 4])
     @test [9.86, 9.86] == descent_step_gd(α, quad3, ∇quad3, [10, 10])
 
-    gd = GradientDescent()
-    @test norm([3, 3] - search(gd, quad3, ∇quad3, [3, 4])) < cbrt(eps())
-    @test norm([3, 3] - search(gd, quad3, ∇quad3, [10, 10])) < cbrt(eps())
-    @test norm([1, 1] - search(gd, ros.f, ros.∇f, [10, 12])) < cbrt(eps())
+    grd = GradientDescent()
+    x0 = [rand(-10:.1:10), rand(-10:.1:10)]
+    @test norm([0, 0] - search(grd, quad0, ∇quad0, x0)) < cbrt(eps())
+    @test norm([0, 0] - search(grd, quad0, ∇quad0, x0)) < cbrt(eps())
+    @test norm([3, 3] - search(grd, quad3, ∇quad3, x0)) < cbrt(eps())
+    @test norm([3, 3] - search(grd, quad3, ∇quad3, x0)) < cbrt(eps())
+    @test norm([1, 1] - search(grd, ros.f, ros.∇f, x0)) < cbrt(eps())
 end
 
 @testset "Algopt.FirstOrder.ConjugateGradientDescent" begin
@@ -61,11 +65,12 @@ end
     @test [3, 3] == descent_step_cgd!(CGDProblemState(2), quad3, ∇quad3, [10, 10])
 
     cgd = ConjugateGradientDescent()
-    @test [0, 0] == search(cgd, quad0, ∇quad0, [3, 4])
-    @test [0, 0] == search(cgd, quad0, ∇quad0, [10, 10])
-    @test [3, 3] == search(cgd, quad3, ∇quad3, [3, 4])
-    @test [3, 3] == search(cgd, quad3, ∇quad3, [10, 10])
-    @test norm([1, 1] - search(cgd, ros.f, ros.∇f, [10, 12])) < cbrt(eps())
+    x0 = [rand(-10:.1:10), rand(-10:.1:10)]
+    @test [0, 0] ≈ search(cgd, quad0, ∇quad0, x0)
+    @test [0, 0] ≈ search(cgd, quad0, ∇quad0, x0)
+    @test [3, 3] ≈ search(cgd, quad3, ∇quad3, x0)
+    @test [3, 3] ≈ search(cgd, quad3, ∇quad3, x0)
+    @test norm([1, 1] - search(cgd, ros.f, ros.∇f, x0)) < cbrt(eps())
 end
 
 end # module
