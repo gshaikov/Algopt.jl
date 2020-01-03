@@ -37,20 +37,16 @@ function descent_until(term::Termination, descent_method, f, ∇f, X, trace)
     for _ = 1:term.max_iter
         x = X[:, end]
         x_next = descent_method(f, ∇f, x)
-        fx, fx_next, ∇fx_next = f(x), f(x_next), ∇f(x_next)
-        if term_cond.abs(fx, fx_next) ||
-            term_cond.rel(fx, fx_next) ||
-            term_cond.grad(∇fx_next)
-            if trace
-                return hcat(X, x_next)
-            else
-                return x_next
-            end
-        end
         if trace
             X = hcat(X, x_next)
         else
             X = x_next
+        end
+        fx, fx_next, ∇fx_next = f(x), f(x_next), ∇f(x_next)
+        if term_cond.abs(fx, fx_next) ||
+            term_cond.rel(fx, fx_next) ||
+            term_cond.grad(∇fx_next)
+            return X
         end
     end
     @warn "descent_until: max number of iterations reached"
