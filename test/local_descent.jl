@@ -11,6 +11,8 @@ LineSearch, StrongBacktracking,
 DescentPointK, MutBracket,
 BracketConditions, StrongWolfeConditions
 
+using Algopt.TestFunctions: Rosenbrock
+
 
 quad0 = x->x'x
 ∇quad0 = x->2x
@@ -18,16 +20,28 @@ quad0 = x->x'x
 quad3 = x->(x - [3, 3])' * (x - [3, 3])
 ∇quad3 = x->2(x - [3, 3])
 
+ros = Rosenbrock(a = 1, b = 5)
+
 @testset "Algopt.LocalDescent.search(::LineSearch)" begin
     ls = LineSearch()
     @test [0, 0] ≈ search(ls, quad0, [10, 10], [-1, -1])
     @test [3, 3] ≈ search(ls, quad3, [10, 10], [-1, -1])
+
+    # Line search of α on 2D Rosenbrock function
+    ls = LineSearch()
+    @test [1, 1] ≈ search(ls, ros.f, [10, 10], [-1, -1])
+    @test [1, 1] ≈ search(ls, ros.f, [-2, -2], [1, 1])
 end
 
 @testset "Algopt.LocalDescent.search(::StrongBacktracking)" begin
     sb = StrongBacktracking()
     @test [0, 0] ≈ search(sb, quad0, ∇quad0, [10, 10], [-1, -1])
     @test [3, 3] ≈ search(sb, quad3, ∇quad3, [10, 10], [-1, -1])
+
+    # Line search of α on 2D Rosenbrock function
+    sb = StrongBacktracking()
+    @test [-2, -2] ≈ search(sb, ros.f, ros.∇f, [10, 10], [-1, -1])
+    @test [1, 1] ≈ search(sb, ros.f, ros.∇f, [-2, -2], [1, 1])
 end
 
 @testset "Algopt.LocalDescent.zoom_bracket!" begin

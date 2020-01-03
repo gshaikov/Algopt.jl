@@ -8,9 +8,11 @@ GoldenSection
 
 abstract type LocalDescentMethods end
 
+# Line Search; Chapter 4.2
+
 struct LineSearch <: LocalDescentMethods
     max_iter
-    LineSearch(; max_iter = 1_000) = new(max_iter)
+    LineSearch(; max_iter = 100) = new(max_iter)
 end
 
 function search(params::LineSearch, f, x_k, d_k)
@@ -23,17 +25,18 @@ function search(params::LineSearch, f, x_k, d_k)
     x_k + α_star * d_k
 end
 
+# Strong Backtracking; Chapter 4.3
+
 struct StrongBacktracking <: LocalDescentMethods
     α0
     β
     σ
     α_factor
-    max_iter_bracketing
     max_iter_zooming
     function StrongBacktracking(;
         α0 = 1, β = 1e-4, σ = 0.1, α_factor = 2,
-        max_iter_bracketing = 1_000, max_iter_zooming = 1_000)
-        new(α0, β, σ, α_factor, max_iter_bracketing, max_iter_zooming)
+        max_iter_zooming = 1_000)
+        new(α0, β, σ, α_factor, max_iter_zooming)
     end
 end
 
@@ -88,27 +91,29 @@ function search(params::StrongBacktracking, f, ∇f, x_k, d_k)
     x_k + α * d_k
 end
 
-function find_bracket(params, bracket_cond)::MutBracket
+function find_bracket(params, bracket_cond; max_iter = 1_000_000)::MutBracket
+    """
+    `max_iter` is a very high number since upon reaching this limit the algorithm
+    will crash with error. This is because a failure to find a bracket means there's
+    something wrong with either the algorithm, or the objective function.
+    """
     bracket = MutBracket(0, params.α0)
-    for iters = 1:params.max_iter_bracketing
+    for iters = 1:max_iter
         if bracket_cond.first(bracket.right) ||
             bracket_cond.second(bracket.right) ||
             bracket_cond.third(bracket.right)
-            break
-        end
-        if iters == params.max_iter_bracketing
-            error("max number of bracketing iterations reached")
+            return bracket
         end
         bracket.left, bracket.right = bracket.right, params.α_factor * bracket.right
     end
-    bracket
+    error("LocalDescent.find_bracket: max number of iterations reached")
 end
 
 function zoom_bracket!(bracket::MutBracket, params, wolfe_cond, is_ascending)::Real
     for iters = 1:params.max_iter_zooming
         if wolfe_cond.first(bracket.right) &&
             wolfe_cond.second(bracket.right)
-            break
+            return bracket.right
         end
         α = bracket.left + (bracket.right - bracket.left) / 2
         if is_ascending(α)
@@ -117,6 +122,7 @@ function zoom_bracket!(bracket::MutBracket, params, wolfe_cond, is_ascending)::R
             bracket.left = α
         end
     end
+    @warn "LocalDescent.zoom_bracket: max number of iterations reached"
     bracket.right
 end
 
