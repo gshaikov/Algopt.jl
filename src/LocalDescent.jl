@@ -98,7 +98,7 @@ function find_bracket(params, bracket_cond; max_iter = 1_000_000)::MutBracket
     something wrong with either the algorithm, or the objective function.
     """
     bracket = MutBracket(0, params.α0)
-    for iters = 1:max_iter
+    for _ = 1:max_iter
         if bracket_cond.first(bracket.right) ||
             bracket_cond.second(bracket.right) ||
             bracket_cond.third(bracket.right)
@@ -110,9 +110,10 @@ function find_bracket(params, bracket_cond; max_iter = 1_000_000)::MutBracket
 end
 
 function zoom_bracket!(bracket::MutBracket, params, wolfe_cond, is_ascending)::Real
-    for iters = 1:params.max_iter_zooming
-        if wolfe_cond.first(bracket.right) &&
-            wolfe_cond.second(bracket.right)
+    for _ = 1:params.max_iter_zooming
+        if (wolfe_cond.first(bracket.right) &&
+            wolfe_cond.second(bracket.right)) ||
+            abs(bracket.left - bracket.right) < eps()
             return bracket.right
         end
         α = bracket.left + (bracket.right - bracket.left) / 2
@@ -122,7 +123,7 @@ function zoom_bracket!(bracket::MutBracket, params, wolfe_cond, is_ascending)::R
             bracket.left = α
         end
     end
-    @warn "LocalDescent.zoom_bracket: max number of iterations reached"
+    @warn "LocalDescent.zoom_bracket: max number of iterations reached; bracket: $bracket"
     bracket.right
 end
 
