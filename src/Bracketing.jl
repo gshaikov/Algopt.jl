@@ -2,10 +2,6 @@ module Bracketing
 
 abstract type BracketingMethod end
 
-function search(method::BracketingMethod, f, x_0 = 0)::Real
-    search_bracket(method, f, find_bracket(f, x_0)).right
-end
-
 struct Bracket
     left::Real
     right::Real
@@ -19,9 +15,18 @@ struct Bracket
     end
 end
 
-function find_bracket(f, x; step = 1e-2, factor = 2.0, max_iter = 1_000)::Bracket
+function search(params::BracketingMethod, f, x_0 = 0)::Real
+    bracket = find_bracket(f, x_0)
+    search_bracket(params, f, bracket).right
+end
+
+function find_bracket(f, x; step = 1e-2, factor = 2.0, max_iter = 1_000_000)::Bracket
     """
     Algorithm 3.1
+
+    `max_iter` is a very high number since upon reaching this limit the algorithm
+    will crash with error. This is because a failure to find a bracket means there's
+    something wrong with either the algorithm, or the objective function.
     """
     a, ya = x, f(x)
     b, yb = a + step, f(a + step)
@@ -38,13 +43,13 @@ function find_bracket(f, x; step = 1e-2, factor = 2.0, max_iter = 1_000)::Bracke
         a, ya, b, yb = b, yb, c, yc
         step *= factor
     end
-    error("can't find a bracket")
+    error("Bracketing.find_bracket: max number of iterations reached")
 end
 
 struct GoldenSection <: BracketingMethod
     ϵ
     max_iter
-    GoldenSection(; ϵ = eps(), max_iter = 1_000) = new(ϵ, max_iter)
+    GoldenSection(; ϵ = eps(), max_iter = 100) = new(ϵ, max_iter)
 end
 
 function search_bracket(params::GoldenSection, f, bracket::Bracket)::Bracket
@@ -61,7 +66,7 @@ function search_bracket(params::GoldenSection, f, bracket::Bracket)::Bracket
     yd = f(d)
     for _ = 1:n - 1
         if abs(a - b) < params.ϵ
-            Bracket(a, b)
+            return Bracket(a, b)
         end
         c = ρ * a + (1 - ρ) * b
         yc = f(c)
