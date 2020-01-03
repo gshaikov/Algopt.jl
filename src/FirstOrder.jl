@@ -4,7 +4,7 @@ using LinearAlgebra
 
 import ..LocalDescent:
 search,
-LineSearch
+LineSearch, StrongBacktracking
 
 struct Termination
     max_iter
@@ -12,13 +12,13 @@ struct Termination
     ϵ_rel
     ϵ_grad
     Termination(;
-        max_iter = 1_000,
-        ϵ_abs = 1e-3,
-        ϵ_rel = 1e-3,
-        ϵ_grad = 1e-3) =
+        max_iter = 1e9,
+        ϵ_abs = eps(),
+        ϵ_rel = eps(),
+        ϵ_grad = eps()) =
         new(max_iter, ϵ_abs, ϵ_rel, ϵ_grad)
     Termination(ϵ;
-        max_iter = 1_000) =
+        max_iter = 1e9) =
         new(max_iter, ϵ, ϵ, ϵ)
 end
 
@@ -42,11 +42,10 @@ function descent_until(term::Termination, descent_method, f, ∇f, X, trace)
             term_cond.rel(fx, fx_next) ||
             term_cond.grad(∇fx_next)
             if trace
-                X = hcat(X, x_next)
+                return hcat(X, x_next)
             else
-                X = x_next
+                return x_next
             end
-            break
         end
         if trace
             X = hcat(X, x_next)
@@ -54,6 +53,7 @@ function descent_until(term::Termination, descent_method, f, ∇f, X, trace)
             X = x_next
         end
     end
+    @warn "descent_until: max number of iterations reached"
     X
 end
 
@@ -134,7 +134,7 @@ function descent_step_cgd!(state, f, ∇f, x)
     d = direction_cgd(g, state.g, state.d)
     state.g = g
     state.d = d
-    search(LineSearch(), f, x, d)
+    search(StrongBacktracking(), f, ∇f, x, d)
 end
 
 function direction_cgd(g, gm1, dm1)
