@@ -28,7 +28,7 @@ mutable struct TerminationConditions
     grad
     TerminationConditions(term::Termination) = 
     new((fx, fx_next)->fx - fx_next < term.ϵ_abs,
-        (fx, fx_next)->fx - fx_next < term.ϵ_abs * fx,
+        (fx, fx_next)->fx - fx_next < term.ϵ_abs * abs(fx),
         ∇fx_next->norm(∇fx_next) < term.ϵ_grad)
 end
 
