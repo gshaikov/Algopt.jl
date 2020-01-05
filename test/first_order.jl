@@ -51,11 +51,12 @@ end
 
     grd = GradientDescent()
     x0 = [rand(-10:.1:10), rand(-10:.1:10)]
-    @test norm([0, 0] - search(grd, quad0, ∇quad0, x0)) < cbrt(eps())
-    @test norm([0, 0] - search(grd, quad0, ∇quad0, x0)) < cbrt(eps())
-    @test norm([3, 3] - search(grd, quad3, ∇quad3, x0)) < cbrt(eps())
-    @test norm([3, 3] - search(grd, quad3, ∇quad3, x0)) < cbrt(eps())
-    @test norm([1, 1] - search(grd, ros.f, ros.∇f, x0)) < cbrt(eps())
+    term = Termination(max_iter = 100_000)
+    @test norm([0, 0] - search(grd, quad0, ∇quad0, x0; term = term)) < cbrt(eps())
+    @test norm([0, 0] - search(grd, quad0, ∇quad0, x0; term = term)) < cbrt(eps())
+    @test norm([3, 3] - search(grd, quad3, ∇quad3, x0; term = term)) < cbrt(eps())
+    @test norm([3, 3] - search(grd, quad3, ∇quad3, x0; term = term)) < cbrt(eps())
+    @test norm([1, 1] - search(grd, ros.f, ros.∇f, x0; term = term)) < cbrt(eps())
 end
 
 @testset "Algopt.FirstOrder.ConjugateGradientDescent" begin

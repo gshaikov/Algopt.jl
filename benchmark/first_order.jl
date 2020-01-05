@@ -11,7 +11,8 @@ res = @btime FirstOrder.search($mgd, $ros.f, $ros.∇f, x_0) setup = (x_0 = [ran
 println("MaximumGradientDescent: ", res)
 
 grd = FirstOrder.GradientDescent()
-res = @btime FirstOrder.search($grd, $ros.f, $ros.∇f, x_0) setup = (x_0 = [rand(-2:.1:2), rand(-2:.1:2)])
+term = FirstOrder.Termination(max_iter = 100_000)
+res = @btime FirstOrder.search($grd, $ros.f, $ros.∇f, x_0; term = $term) setup = (x_0 = [rand(-2:.1:2), rand(-2:.1:2)])
 println("GradientDescent: ", res)
 
 cgd = FirstOrder.ConjugateGradientDescent()

@@ -12,13 +12,13 @@ struct Termination
     ϵ_rel
     ϵ_grad
     Termination(;
-        max_iter = 1e9,
+        max_iter = 10_000,
         ϵ_abs = eps(),
         ϵ_rel = eps(),
         ϵ_grad = eps()) =
         new(max_iter, ϵ_abs, ϵ_rel, ϵ_grad)
     Termination(ϵ;
-        max_iter = 1e9) =
+        max_iter = 10_000) =
         new(max_iter, ϵ, ϵ, ϵ)
 end
 
