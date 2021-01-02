@@ -8,7 +8,7 @@ using Algopt.UniDerivative:
 df,
 CentralDiff, ComplexDiff
 
-quadratic = x->x^2
+quadratic = x -> x^2
 
 @testset "Algopt.UniDerivative.df(::CentralDiff)" begin
     @test df(CentralDiff(), quadratic, 3) ≈ 2 * 3

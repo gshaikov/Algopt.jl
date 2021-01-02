@@ -2,68 +2,87 @@ module FirstOrder
 
 using LinearAlgebra
 
-import ..LocalDescent:
-search,
-LineSearch, StrongBacktracking
+import ..Bracketing:
+BracketingSearch
 
-struct Termination
-    max_iter
+import ..LocalDescent:
+StrongBacktracking,
+search_local
+
+struct TerminationTolerance
     ϵ_abs
     ϵ_rel
     ϵ_grad
-    Termination(;
-        max_iter = 10_000,
-        ϵ_abs = eps(),
-        ϵ_rel = eps(),
-        ϵ_grad = eps()) =
-        new(max_iter, ϵ_abs, ϵ_rel, ϵ_grad)
-    Termination(ϵ;
-        max_iter = 10_000) =
-        new(max_iter, ϵ, ϵ, ϵ)
+    TerminationTolerance(;
+        ϵ_abs=eps(),
+        ϵ_rel=eps(),
+        ϵ_grad=eps()) =
+        new(ϵ_abs, ϵ_rel, ϵ_grad)
+    TerminationTolerance(ϵ) = new(ϵ, ϵ, ϵ)
 end
 
-mutable struct TerminationConditions
+mutable struct TerminationPredicates
     abs
     rel
     grad
-    TerminationConditions(term::Termination) = 
-    new((fx, fx_next)->fx - fx_next < term.ϵ_abs,
-        (fx, fx_next)->fx - fx_next < term.ϵ_abs * abs(fx),
-        ∇fx_next->norm(∇fx_next) < term.ϵ_grad)
+    TerminationPredicates(term::TerminationTolerance) = 
+    new((fx, fx_next) -> fx - fx_next < term.ϵ_abs,
+        (fx, fx_next) -> fx - fx_next < term.ϵ_abs * abs(fx),
+        ∇fx_next -> norm(∇fx_next) < term.ϵ_grad)
 end
 
-function descent_until(term::Termination, descent_method, f, ∇f, X, trace)
-    term_cond = TerminationConditions(term)
-    for _ = 1:term.max_iter
-        x = X[:, end]
-        x_next = descent_method(f, ∇f, x)
-        if trace
-            X = hcat(X, x_next)
-        else
-            X = x_next
-        end
+function create_termination_checker(term, f, ∇f)
+    term_pred = TerminationPredicates(term)
+    function inner(x, x_next)
         fx, fx_next, ∇fx_next = f(x), f(x_next), ∇f(x_next)
-        if term_cond.abs(fx, fx_next) ||
-            term_cond.rel(fx, fx_next) ||
-            term_cond.grad(∇fx_next)
-            return X
+        term_pred.abs(fx, fx_next) || term_pred.rel(fx, fx_next) || term_pred.grad(∇fx_next)
+    end
+    inner
+end
+
+function descent_until(descent_step, x, termination_tolerance_ok, max_steps, trace)
+    x_trace = x
+    for _ = 1:max_steps
+        x_next = descent_step(x)
+        if trace
+            x_trace = hcat(x_trace, x_next)
         end
+        if termination_tolerance_ok(x, x_next)
+            return trace ? x_trace : x_next
+        end
+        x = x_next
     end
     @warn "descent_until: max number of iterations reached"
-    X
+    trace ? x_trace : x
 end
 
-abstract type FirstOrderMethods end
+abstract type FirstOrderMethod end
 
 # Maximum Gradient Descent
 
-struct MaximumGradientDescent <: FirstOrderMethods end
-
-function search(::MaximumGradientDescent, f, ∇f, x_0; term = Termination(), trace = false)
-    descent_until(term, descent_step_maxgd, f, ∇f, x_0, trace)
+struct MaximumGradientDescent <: FirstOrderMethod
+    local_search
+    term
+    max_steps
+    MaximumGradientDescent(;
+        local_search=BracketingSearch(),
+        term=TerminationTolerance(),
+        max_steps=10_000) =
+        new(local_search, term, max_steps)
 end
 
-function descent_step_maxgd(f, ∇f, x)
+function search(params::MaximumGradientDescent, f, ∇f, x_0; trace=false)
+    descent_step = (x) -> descent_step_maxgd(params.local_search, f, ∇f, x)
+    descent_until(
+        descent_step,
+        x_0,
+        create_termination_checker(params.term, f, ∇f),
+        params.max_steps,
+        trace
+    )
+end
+
+function descent_step_maxgd(params, f, ∇f, x)
     """
     Maximum Gradient Descent
 
@@ -73,7 +92,7 @@ function descent_step_maxgd(f, ∇f, x)
     """
     g = ∇f(x)
     d = direction_maxgd(g)
-    search(LineSearch(), f, x, d)
+    search_local(params, f, x, d)
 end
 
 function direction_maxgd(g)
@@ -82,17 +101,29 @@ end
 
 # Gradient Descent
 
-struct GradientDescent <: FirstOrderMethods
+struct GradientDescent <: FirstOrderMethod
     α
-    GradientDescent(; α = 0.001) = new(α)
+    term
+    max_steps
+    GradientDescent(;
+        α=0.001,
+        term=TerminationTolerance(),
+        max_steps=10_000) =
+        new(α, term, max_steps)
 end
 
-function search(params::GradientDescent, f, ∇f, x_0; term = Termination(), trace = false)
-    descent_step = (f, ∇f, x)->descent_step_gd(params.α, f, ∇f, x)
-    descent_until(term, descent_step, f, ∇f, x_0, trace)
+function search(params::GradientDescent, f, ∇f, x_0; trace=false)
+    descent_step = (x) -> descent_step_gd(params.α, ∇f, x)
+    descent_until(
+        descent_step,
+        x_0,
+        create_termination_checker(params.term, f, ∇f),
+        params.max_steps,
+        trace
+    )
 end
 
-function descent_step_gd(α, f, ∇f, x)
+function descent_step_gd(α, ∇f, x)
     """
     Gradient Descent
     Algorithm 5.1
@@ -105,7 +136,16 @@ end
 
 # Conjugate Gradient Descent
 
-struct ConjugateGradientDescent <: FirstOrderMethods end
+struct ConjugateGradientDescent <: FirstOrderMethod
+    local_search
+    term
+    max_steps
+    ConjugateGradientDescent(;
+        local_search=StrongBacktracking(),
+        term=TerminationTolerance(),
+        max_steps=10_000) =
+        new(local_search, term, max_steps)
+end
 
 mutable struct CGDProblemState
     g
@@ -113,13 +153,19 @@ mutable struct CGDProblemState
     CGDProblemState(dim) = new(ones(dim), zeros(dim))
 end
 
-function search(params::ConjugateGradientDescent, f, ∇f, x_0; term = Termination(), trace = false)
+function search(params::ConjugateGradientDescent, f, ∇f, x_0; trace=false)
     state = CGDProblemState(size(x_0))
-    descent_step = (f, ∇f, x)->descent_step_cgd!(state, f, ∇f, x)
-    descent_until(term, descent_step, f, ∇f, x_0, trace)
+    descent_step = (x) -> descent_step_cgd!(state, params.local_search, f, ∇f, x)
+    descent_until(
+        descent_step,
+        x_0,
+        create_termination_checker(params.term, f, ∇f),
+        params.max_steps,
+        trace
+    )
 end
 
-function descent_step_cgd!(state, f, ∇f, x)
+function descent_step_cgd!(state, params, f, ∇f, x)
     """
     Conjugate Gradient Descent
     Algorithm 5.2
@@ -130,7 +176,7 @@ function descent_step_cgd!(state, f, ∇f, x)
     d = direction_cgd(g, state.g, state.d)
     state.g = g
     state.d = d
-    search(StrongBacktracking(), f, ∇f, x, d)
+    search_local(params, f, ∇f, x, d)
 end
 
 function direction_cgd(g, gm1, dm1)

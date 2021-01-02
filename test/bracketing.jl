@@ -1,56 +1,86 @@
 module BracketingTests
 
-import ..Algopt # ensure we are using the correct Algopt
+import ..Algopt # ensure we are using correct Algopt
 
 using Test
+
 using Algopt.Bracketing:
-search, find_bracket, search_bracket,
-Bracket,
-GoldenSection
+Bracket, BracketingSearch, FindBracket, GoldenSectionSearch,
+search_univariate, find_bracket, narrow_bracket
 
-using Algopt.TestFunctions: Rosenbrock
+using Algopt.TestFunctions:
+Rosenbrock
 
 
-quad2 = x->(x - 2)^2
+quadratic_test_function = x -> (x - 2)^2
 
-ros = Rosenbrock(a = 1, b = 5)
+rosenbrock_test_function = Rosenbrock(a=1, b=5)
 
-@testset "Algopt.Bracketing.search(::GoldenSection)" begin
-    @test 2 ≈ search(GoldenSection(), quad2)
-    @test 2 ≈ search(GoldenSection(), quad2, -1e6)
-    @test !(2 ≈ search(GoldenSection(max_iter = 2), quad2))
-    
-    @test abs(0 - search(GoldenSection(), x->x'x)) <= eps()
+@testset "bracketing with golden section search" begin
+    optimal_design_point = search_univariate(
+        BracketingSearch(narrow_bracket=GoldenSectionSearch()),
+        quadratic_test_function,
+        0
+    )
+    @test 2 ≈ optimal_design_point
+
+    optimal_design_point = search_univariate(
+        BracketingSearch(narrow_bracket=GoldenSectionSearch()),
+        quadratic_test_function,
+        -1e6
+    )
+    @test 2 ≈ optimal_design_point
+
+    optimal_design_point = search_univariate(
+        BracketingSearch(narrow_bracket=GoldenSectionSearch(
+            max_steps=2
+        )),
+        quadratic_test_function,
+        -1e6
+    )
+    @test !(2 ≈ optimal_design_point)
+
+    optimal_design_point = search_univariate(
+        BracketingSearch(narrow_bracket=GoldenSectionSearch()),
+        x -> x'x,
+        0
+    )
+    @test abs(0 - optimal_design_point) <= eps()
 
     # Line search of α on 2D Rosenbrock function
-    ros_line = α->ros.f([10, 10] + α * [-1, -1])
-    @test 9 ≈ search(GoldenSection(), ros_line, 0)
+    ros_line = α -> rosenbrock_test_function.f([10, 10] + α * [-1, -1])
+    optimal_design_point = search_univariate(
+        BracketingSearch(narrow_bracket=GoldenSectionSearch()),
+        ros_line,
+        0
+    )
+    @test 9 ≈ optimal_design_point
 end
 
-@testset "Algopt.Bracketing.find_bracket" begin
-    bracket = find_bracket(quad2, 0)
+@testset "find bracket" begin
+    bracket = find_bracket(FindBracket(), quadratic_test_function, 0)
     @test bracket.left < 2
     @test bracket.right > 2
     
-    bracket = find_bracket(quad2, 10)
+    bracket = find_bracket(FindBracket(), quadratic_test_function, 10)
     @test bracket.left < 2
     @test bracket.right > 2
     
-    bracket = find_bracket(quad2, -1e6)
+    bracket = find_bracket(FindBracket(), quadratic_test_function, -1e6)
     @test bracket.left < 2
     @test bracket.right > 2
 end
 
-@testset "Algopt.Bracketing.search_bracket" begin
-    bracket = search_bracket(GoldenSection(), quad2, Bracket(0, 10))
+@testset "narrow bracket with golden section search" begin
+    bracket = narrow_bracket(GoldenSectionSearch(), quadratic_test_function, Bracket(0, 10))
     @test bracket.left ≈ 2
     @test bracket.right ≈ 2
 
-    bracket = search_bracket(GoldenSection(), quad2, Bracket(-1e6, 1e6))
+    bracket = narrow_bracket(GoldenSectionSearch(), quadratic_test_function, Bracket(-1e6, 1e6))
     @test bracket.left ≈ 2
     @test bracket.right ≈ 2
 
-    bracket = search_bracket(GoldenSection(max_iter = 2), quad2, Bracket(-1e6, 1e6))
+    bracket = narrow_bracket(GoldenSectionSearch(max_steps=2), quadratic_test_function, Bracket(-1e6, 1e6))
     @test !(bracket.left ≈ 2)
     @test !(bracket.right ≈ 2)
 end

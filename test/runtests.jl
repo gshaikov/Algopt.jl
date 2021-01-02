@@ -4,7 +4,7 @@ import Algopt
 
 # Make sure to not start with an outdated registry
 # https://github.com/JuliaLang/Pkg.jl/blob/master/test/runtests.jl
-rm(joinpath(@__DIR__, "registries"); force = true, recursive = true)
+rm(joinpath(@__DIR__, "registries"); force=true, recursive=true)
 
 tests = [
     "uni_derivative.jl",
@@ -20,6 +20,6 @@ end
 
 # clean up locally cached registry
 # https://github.com/JuliaLang/Pkg.jl/blob/master/test/runtests.jl
-rm(joinpath(@__DIR__, "registries"); force = true, recursive = true)
+rm(joinpath(@__DIR__, "registries"); force=true, recursive=true)
 
 end # module

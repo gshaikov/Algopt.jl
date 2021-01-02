@@ -7,7 +7,7 @@ using Test
 using Algopt.TestFunctions:
 Rosenbrock
 
-@testset "Algopt.TestFunctions.Rosenbrock" begin
+@testset "Rosenbrock test function" begin
     ros = Rosenbrock()
     @test 0 == ros.f(ros.argmin)
     @test [0, 0] == ros.∇f(ros.argmin)
