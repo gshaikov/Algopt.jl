@@ -2,11 +2,8 @@ module FirstOrder
 
 using LinearAlgebra
 
-import ..Bracketing:
-BracketingSearch
-
 import ..LocalDescent:
-StrongBacktracking,
+LineSearch, StrongBacktracking,
 search_local
 
 struct TerminationTolerance
@@ -32,12 +29,14 @@ mutable struct TerminationPredicates
 end
 
 function create_termination_checker(term, f, ∇f)
-    term_pred = TerminationPredicates(term)
-    function inner(x, x_next)
+    abs_improv = (fx, fx_next) -> fx - fx_next < term.ϵ_abs
+    rel_improv = (fx, fx_next) -> fx - fx_next < term.ϵ_abs * abs(fx)
+    grad_improv = ∇fx_next -> norm(∇fx_next) < term.ϵ_grad
+    function closure(x, x_next)
         fx, fx_next, ∇fx_next = f(x), f(x_next), ∇f(x_next)
-        term_pred.abs(fx, fx_next) || term_pred.rel(fx, fx_next) || term_pred.grad(∇fx_next)
+        abs_improv(fx, fx_next) || rel_improv(fx, fx_next) || grad_improv(∇fx_next)
     end
-    inner
+    closure
 end
 
 function descent_until(descent_step, x, termination_tolerance_ok, max_steps, trace)
@@ -65,7 +64,7 @@ struct MaximumGradientDescent <: FirstOrderMethod
     term
     max_steps
     MaximumGradientDescent(;
-        local_search=BracketingSearch(),
+        local_search=LineSearch(),
         term=TerminationTolerance(),
         max_steps=10_000) =
         new(local_search, term, max_steps)

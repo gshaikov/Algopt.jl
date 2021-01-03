@@ -6,11 +6,8 @@ using Test
 
 using LinearAlgebra
 
-import Algopt.Bracketing:
-BracketingSearch
-
 import Algopt.LocalDescent:
-StrongBacktracking
+LineSearch, StrongBacktracking
 
 using Algopt.FirstOrder:
 TerminationTolerance, MaximumGradientDescent, GradientDescent, ConjugateGradientDescent, CGDProblemState,
@@ -32,10 +29,10 @@ ros = Rosenbrock(a=1, b=5)
     @test [-0.6, -0.8] == direction_maxgd([6, 8])
     @test [0, -1] == direction_maxgd([0, 2])
 
-    @test [0, 0] == descent_step_maxgd(BracketingSearch(), quad0, ∇quad0, [3, 4])
-    @test [0, 0] == descent_step_maxgd(BracketingSearch(), quad0, ∇quad0, [10, 10])
-    @test [3, 3] ≈ descent_step_maxgd(BracketingSearch(), quad3, ∇quad3, [3, 4])
-    @test [3, 3] ≈ descent_step_maxgd(BracketingSearch(), quad3, ∇quad3, [10, 10])
+    @test [0, 0] == descent_step_maxgd(LineSearch(), quad0, ∇quad0, [3, 4])
+    @test [0, 0] == descent_step_maxgd(LineSearch(), quad0, ∇quad0, [10, 10])
+    @test [3, 3] ≈ descent_step_maxgd(LineSearch(), quad3, ∇quad3, [3, 4])
+    @test [3, 3] ≈ descent_step_maxgd(LineSearch(), quad3, ∇quad3, [10, 10])
 
     mgd = MaximumGradientDescent()
     x0 = [rand(-10:.1:10), rand(-10:.1:10)]
