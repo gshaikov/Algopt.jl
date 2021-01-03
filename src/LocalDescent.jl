@@ -34,7 +34,8 @@ struct StrongBacktracking <: LocalDescentMethod
     α_factor
     max_steps_find
     max_steps_zoom
-    function StrongBacktracking(; β=1e-4, σ=0.1, α0=1, α_factor=2, max_steps_find=1_000_000, max_steps_zoom=1_000)
+    function StrongBacktracking(;
+        β=1e-4, σ=0.1, α0=1, α_factor=2, max_steps_find=1_000_000, max_steps_zoom=10_000)
         new(β, σ, α0, α_factor, max_steps_find, max_steps_zoom)
     end
 end
@@ -103,7 +104,7 @@ function find_bracket(params::StrongBacktracking, bracket_cond)::MutBracket
         end
         bracket.left, bracket.right = bracket.right, params.α_factor * bracket.right
     end
-    error("max number of iterations reached")
+    error("max number of steps reached: bracket $bracket, max_steps_find $(params.max_steps_find)")
 end
 
 function zoom_bracket!(bracket::MutBracket, params::StrongBacktracking, wolfe_cond::StrongWolfeConditions, is_ascending)::Real
@@ -133,7 +134,7 @@ function zoom_bracket!(bracket::MutBracket, params::StrongBacktracking, wolfe_co
             bracket.left = α
         end
     end
-    @warn "zoom_bracket: max number of iterations reached: bracket: $bracket"
+    @warn "zoom_bracket: max number of steps reached: bracket $bracket, max_steps_zoom $(params.max_steps_zoom)"
     bracket.right
 end
 

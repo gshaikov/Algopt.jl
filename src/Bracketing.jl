@@ -25,7 +25,7 @@ abstract type NarrowBracketMethod end
 struct GoldenSectionSearch <: NarrowBracketMethod
     ϵ
     max_steps
-    GoldenSectionSearch(; ϵ=eps(), max_steps=100) = new(ϵ, max_steps)
+    GoldenSectionSearch(; ϵ=eps(), max_steps=10_000) = new(ϵ, max_steps)
 end
 
 struct BracketingSearch
@@ -79,8 +79,13 @@ function narrow_bracket(params::GoldenSectionSearch, f, bracket::Bracket)::Brack
     Narrow the bracket around the minimum.
     """
     a, b = bracket.left, bracket.right
-    max_eval = (b - a) / (params.ϵ * log(Base.MathConstants.golden))
-    n = params.max_steps > max_eval ? max_eval : params.max_steps
+    max_eval = compute_max_eval(a, b, params.ϵ)
+    if params.max_steps >= max_eval
+        n = max_eval
+    else
+        @warn "narrow_bracket: bracket too wide: bracket $(bracket), max_eval $max_eval, max_steps $(params.max_steps)"
+        n = params.max_steps
+    end
 
     ρ = Base.MathConstants.golden - 1
     d = ρ * b + (1 - ρ) * a
@@ -98,6 +103,11 @@ function narrow_bracket(params::GoldenSectionSearch, f, bracket::Bracket)::Brack
         end
     end
     Bracket(a, b)
+end
+
+function compute_max_eval(a, b, ϵ)
+    bae = (b - a) / ϵ
+    1 + log(bae) / log(Base.MathConstants.golden)
 end
 
 end # module

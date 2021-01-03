@@ -18,7 +18,7 @@ quad0 = x -> x'x
 quad3 = x -> (x - [3, 3])' * (x - [3, 3])
 ∇quad3 = x -> 2(x - [3, 3])
 
-@testset "line search with bracketing minimisation" begin
+@testset "line search with defaults" begin
     ls = LineSearch()
     @test [0, 0] ≈ search_local(ls, quad0, [10, 10], [-1, -1])
     @test [3, 3] ≈ search_local(ls, quad3, [10, 10], [-1, -1])
@@ -160,10 +160,10 @@ end
     @test [3, 3] ≈ search_local(sb, quad3, ∇quad3, [10, 0.1], [-1, 2.9 / 7])
     @test [3, 3] ≈ search_local(sb, quad3, ∇quad3, [10, -10], [-1, 13 / 7])
 
-    sb = StrongBacktracking()
+    sb = StrongBacktracking(σ=cbrt(eps()))
     ros = Rosenbrock(a=1, b=5)
-    @test [2, 2] ≈ search_local(sb, ros.f, ros.∇f, [10, 10], [-1, -1])
-    @test [0, 0] ≈ search_local(sb, ros.f, ros.∇f, [-2, -2], [1, 1])
+    @test [1, 1] ≈ search_local(sb, ros.f, ros.∇f, [10, 10], [-1, -1])
+    @test [1, 1] ≈ search_local(sb, ros.f, ros.∇f, [-2, -2], [1, 1])
 end
 
 end # module

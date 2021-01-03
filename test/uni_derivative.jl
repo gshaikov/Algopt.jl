@@ -10,11 +10,11 @@ CentralDiff, ComplexDiff
 
 quadratic = x -> x^2
 
-@testset "Algopt.UniDerivative.df(::CentralDiff)" begin
+@testset "derivative central method" begin
     @test df(CentralDiff(), quadratic, 3) ≈ 2 * 3
 end
 
-@testset "Algopt.UniDerivative.df(::ComplexDiff)" begin
+@testset "derivative complex method" begin
     @test df(ComplexDiff(), quadratic, 3) ≈ 2 * 3
 end
 
