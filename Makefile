@@ -4,11 +4,10 @@ build:
 tests: build
 	julia --project --color=yes test/runtests.jl
 
-benchmark-local_descent: _benchmark_local_descent
-benchmark-first_order: _benchmark_first_order
-_benchmark_%: build
-	julia --project --color=yes benchmark/$*.jl
+arg ?= none
 
-plot-first_order: _plot_first_order
-_plot_%: build
-	julia --project --color=yes -i plot/$*.jl
+benchmark: build
+	julia --project --color=yes benchmark/$(arg).jl
+
+plot: build
+	julia --project --color=yes -i plot/$(arg).jl

@@ -3,7 +3,7 @@ module FirstOrder
 using LinearAlgebra
 
 import ..LocalDescent:
-LineSearch, StrongBacktracking,
+LocalDescentMethod, LineSearch, StrongBacktracking,
 search_local
 
 struct TerminationTolerance
@@ -18,41 +18,40 @@ struct TerminationTolerance
     TerminationTolerance(ϵ) = new(ϵ, ϵ, ϵ)
 end
 
-mutable struct TerminationPredicates
-    abs
-    rel
-    grad
-    TerminationPredicates(term::TerminationTolerance) = 
-    new((fx, fx_next) -> fx - fx_next < term.ϵ_abs,
-        (fx, fx_next) -> fx - fx_next < term.ϵ_abs * abs(fx),
-        ∇fx_next -> norm(∇fx_next) < term.ϵ_grad)
+function check_termination(term::TerminationTolerance, f, ∇f, x, x_next)
+    fx, fx_next, ∇fx_next = f(x), f(x_next), ∇f(x_next)
+    (
+        fx - fx_next < term.ϵ_abs ||
+        fx - fx_next < term.ϵ_rel * abs(fx) ||
+        norm(∇fx_next) < term.ϵ_grad
+    )
+    # && fx - fx_next >= 0
 end
 
-function create_termination_checker(term, f, ∇f)
-    abs_improv = (fx, fx_next) -> fx - fx_next < term.ϵ_abs
-    rel_improv = (fx, fx_next) -> fx - fx_next < term.ϵ_abs * abs(fx)
-    grad_improv = ∇fx_next -> norm(∇fx_next) < term.ϵ_grad
-    function closure(x, x_next)
-        fx, fx_next, ∇fx_next = f(x), f(x_next), ∇f(x_next)
-        abs_improv(fx, fx_next) || rel_improv(fx, fx_next) || grad_improv(∇fx_next)
-    end
-    closure
+mutable struct TrainingLog
+    x
+    fx
+    ∇fx
 end
 
-function descent_until(descent_step, x, termination_tolerance_ok, max_steps, trace)
-    x_trace = x
+function log_step!(tl::TrainingLog, f, ∇f, x)
+    fx, ∇fx = f(x), ∇f(x)
+    tl.x = hcat(tl.x, x)
+    tl.fx = hcat(tl.fx, fx)
+    tl.∇fx = hcat(tl.∇fx, ∇fx)
+end
+
+function descent_until(descent_step, x, should_terminate, max_steps, log_step)
     for _ = 1:max_steps
         x_next = descent_step(x)
-        if trace
-            x_trace = hcat(x_trace, x_next)
-        end
-        if termination_tolerance_ok(x, x_next)
-            return trace ? x_trace : x_next
+        log_step(x_next)
+        if should_terminate(x, x_next)
+            return x_next
         end
         x = x_next
     end
-    @warn "descent_until: max number of iterations reached"
-    trace ? x_trace : x
+    @warn "descent_until: max number of steps reached: max_steps $max_steps"
+    x
 end
 
 abstract type FirstOrderMethod end
@@ -72,16 +71,18 @@ end
 
 function search(params::MaximumGradientDescent, f, ∇f, x_0; trace=false)
     descent_step = (x) -> descent_step_maxgd(params.local_search, f, ∇f, x)
-    descent_until(
-        descent_step,
-        x_0,
-        create_termination_checker(params.term, f, ∇f),
-        params.max_steps,
-        trace
-    )
+    should_terminate = (x, x_next) -> check_termination(params.term, f, ∇f, x, x_next)
+    if trace
+        tl = TrainingLog(x_0, f(x_0), ∇f(x_0))
+        log_step = (x) -> log_step!(tl, f, ∇f, x)
+    else
+        log_step = (x) -> nothing
+    end
+    x_opt = descent_until(descent_step, x_0, should_terminate, params.max_steps, log_step)
+    x_opt, (trace ? tl : nothing)
 end
 
-function descent_step_maxgd(params, f, ∇f, x)
+function descent_step_maxgd(params::LineSearch, f, ∇f, x)
     """
     Maximum Gradient Descent
 
@@ -113,13 +114,15 @@ end
 
 function search(params::GradientDescent, f, ∇f, x_0; trace=false)
     descent_step = (x) -> descent_step_gd(params.α, ∇f, x)
-    descent_until(
-        descent_step,
-        x_0,
-        create_termination_checker(params.term, f, ∇f),
-        params.max_steps,
-        trace
-    )
+    should_terminate = (x, x_next) -> check_termination(params.term, f, ∇f, x, x_next)
+    if trace
+        tl = TrainingLog(x_0, f(x_0), ∇f(x_0))
+        log_step = (x) -> log_step!(tl, f, ∇f, x)
+    else
+        log_step = (x) -> nothing
+    end
+    x_opt = descent_until(descent_step, x_0, should_terminate, params.max_steps, log_step)
+    x_opt, (trace ? tl : nothing)
 end
 
 function descent_step_gd(α, ∇f, x)
@@ -155,13 +158,15 @@ end
 function search(params::ConjugateGradientDescent, f, ∇f, x_0; trace=false)
     state = CGDProblemState(size(x_0))
     descent_step = (x) -> descent_step_cgd!(state, params.local_search, f, ∇f, x)
-    descent_until(
-        descent_step,
-        x_0,
-        create_termination_checker(params.term, f, ∇f),
-        params.max_steps,
-        trace
-    )
+    should_terminate = (x, x_next) -> check_termination(params.term, f, ∇f, x, x_next)
+    if trace
+        tl = TrainingLog(x_0, f(x_0), ∇f(x_0))
+        log_step = (x) -> log_step!(tl, f, ∇f, x)
+    else
+        log_step = (x) -> nothing
+    end
+    x_opt = descent_until(descent_step, x_0, should_terminate, params.max_steps, log_step)
+    x_opt, (trace ? tl : nothing)
 end
 
 function descent_step_cgd!(state, params, f, ∇f, x)
